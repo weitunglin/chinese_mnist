@@ -7,25 +7,28 @@ import torch.optim as optim
 from torch.utils.data.dataset import random_split
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
+from torchsummary import summary
 import pandas as pd
 from dataset import ChineseMNISTDataset
 
 class Net(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 128, 5)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(128, 256, 5)
-        self.fc1 = nn.Linear(43264, 2048)
-        self.fc2 = nn.Linear(2048, 1024)
-        self.fc3 = nn.Linear(1024, 15)
+        self.conv1 = nn.Conv2d(1, 512, 5)
+        self.conv2 = nn.Conv2d(512, 256, 5)
+        self.conv3 = nn.Conv2d(256, 128, 5)
+
+        self.fc1 = nn.Linear(2048, 512)
+        self.fc2 = nn.Linear(512, 128)
+        self.fc3 = nn.Linear(128, 15)
         self.softmax = nn.LogSoftmax(dim=0)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
         x = torch.flatten(x, 1) # flatten all dimensions except batch
-        # print(x.shape)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
@@ -107,6 +110,7 @@ def main():
     test_loader = DataLoader(ChineseMNISTDataset(test_dataset, args.img_folder_path, transform), batch_size=args.test_batch_size, shuffle=True)
 
     model = Net()
+    print(summary(model, (1, 64, 64)))
 
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -115,6 +119,9 @@ def main():
         print(f"Epoch {epoch + 1}\n-----------------------")
         train(model, criterion, optimizer, train_loader)
         test(model, test_loader)
+
+    MODEL_PATH = './chinese_mnist.pth'
+    torch.save(model.state_dict(), MODEL_PATH)
 
 if __name__ == "__main__":
     main()
