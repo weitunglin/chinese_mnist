@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torchsummary import summary
 import pandas as pd
+from torch.utils.tensorboard import SummaryWriter
 from dataset import ChineseMNISTDataset
 
 class Net(nn.Module):
@@ -36,7 +37,7 @@ class Net(nn.Module):
         # print(x.shape)
         return x
 
-def train(model, criterion, optimizer, train_loader):
+def train(model, criterion, optimizer, train_loader, epoch, tensor_board):
     labels = torch.tensor([]).detach()
     preds  = torch.tensor([]).detach()
 
@@ -64,13 +65,16 @@ def train(model, criterion, optimizer, train_loader):
         running_loss += loss.item()
         if i % 20 == 19:
             print(f"loss: {running_loss/20:>.3f} [{i * len(images)}/{len(train_loader)*len(images)}]")
+
+            tensor_board.add_scalar(f"Epoch {epoch} Training Loss (by batch)", running_loss/20, i)
             running_loss = 0
     
     total_count = labels.size(0)
     correct_count = (labels == preds).sum().item()
+    tensor_board.add_scalar(f"Training Accuracy (by epoch)", correct_count / total_count, epoch)
     print(f'Training Accuracy: {correct_count/total_count}\n')
 
-def test(model, test_loader):
+def test(model, test_loader, epoch, tensor_board):
     labels = torch.tensor([]).detach()
     preds  = torch.tensor([]).detach()
 
@@ -84,6 +88,7 @@ def test(model, test_loader):
     
     total_count = labels.size(0)
     correct_count = (labels == preds).sum().item()
+    tensor_board.add_scalar(f"Testing Accuracy (by epoch)", correct_count / total_count, epoch)
     print(f'Testing Accuracy: {correct_count/total_count}\n')
 
 def main():
@@ -115,13 +120,17 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
+    tensor_board = SummaryWriter()
+
     for epoch in range(args.epochs):
         print(f"Epoch {epoch + 1}\n-----------------------")
-        train(model, criterion, optimizer, train_loader)
-        test(model, test_loader)
+        train(model, criterion, optimizer, train_loader, epoch, tensor_board)
+        test(model, test_loader, epoch, tensor_board)
 
     MODEL_PATH = './chinese_mnist.pth'
     torch.save(model.state_dict(), MODEL_PATH)
+
+    tensor_board.close()
 
 if __name__ == "__main__":
     main()
