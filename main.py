@@ -92,8 +92,8 @@ def main():
     parser.add_argument("--batch-size", type=int, default=64, metavar="N", help="input batch size for training (default: 64)")
     parser.add_argument("--test-batch-size", type=int, default=64, metavar="N", help="input batch size for testing (default: 64)")
     parser.add_argument("--epochs", type=int, default=3, metavar="N", help="number of epochs to train (default: 3)")
-    parser.add_argument("--data-file-path", type=str, default="/Users/allen/ml/chinese_mnist/chinese_mnist.csv", help="path to the csv data file")
-    parser.add_argument("--img-folder-path", type=str, default="/Users/allen/ml/chinese_mnist/img", help="path to the csv data file")
+    parser.add_argument("--data-file-path", type=str, default="./chinese_mnist.csv", help="path to the csv data file")
+    parser.add_argument("--img-folder-path", type=str, default="./img", help="path to the csv data file")
     parser.add_argument("--run-name", type=str, default=datetime.now().strftime("%Y/%m/%d %H:%M:%S"), help="run id for tensor board")
     parser.add_argument("--random-seed", type=int, default=42, help="random seed")
 
@@ -117,7 +117,8 @@ def main():
     train_loader = DataLoader(ChineseMNISTDataset(train_dataset, args.img_folder_path, transform), batch_size=args.batch_size, shuffle=True)
     test_loader = DataLoader(ChineseMNISTDataset(test_dataset, args.img_folder_path, transform), batch_size=args.test_batch_size, shuffle=True)
 
-    model = Net()
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = Net().to(device)
     print(summary(model, (1, 64, 64)))
 
     criterion = nn.CrossEntropyLoss()

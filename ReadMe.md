@@ -14,12 +14,15 @@ pip install -r requirements.txt
 ### Train the model
 ![Usage](usage.png)
 
+### Download dataset
+* go to [kaggle dataset](https://www.kaggle.com/gpreda/chinese-mnist)
+* download dataset
+* unzip
+
 ### Network Architecture
 ![Model](model.png)
 
-
 ## Accuracy
-Training accuracy: 99.3%
 Testing accurarcy: 99.8%
 
 ### Tensorboard
